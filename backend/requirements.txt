@@ -1,0 +1,19 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+sqlalchemy==2.0.35
+pydantic==2.9.2
+python-dotenv==1.0.1
+
+# ASR + LLM providers (pick what you use; both are safe to keep installed)
+openai==1.51.0
+anthropic==0.36.0
+
+# Optional: free/offline ASR fallback (ASR_PROVIDER=local)
+faster-whisper==1.0.3
+
+# Optional: semantic search / "ask your meetings" feature
+chromadb==0.5.5
+
+# Optional: DOCX minutes export
+python-docx==1.1.2

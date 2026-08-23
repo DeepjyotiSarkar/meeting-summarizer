@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Meeting Summarizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="rack">
+    <div class="brand">
+      <svg class="brand-wave" viewBox="0 0 120 24" aria-hidden="true">
+        <rect x="0"  y="8"  width="3" height="8"  class="bar b1"/>
+        <rect x="6"  y="4"  width="3" height="16" class="bar b2"/>
+        <rect x="12" y="10" width="3" height="4"  class="bar b3"/>
+        <rect x="18" y="2"  width="3" height="20" class="bar b4"/>
+        <rect x="24" y="6"  width="3" height="12" class="bar b5"/>
+        <rect x="30" y="9"  width="3" height="6"  class="bar b6"/>
+      </svg>
+      <div>
+        <h1>Meeting<br/>Summarizer</h1>
+        <p class="tagline">Transcripts in. Decisions out.</p>
+      </div>
+    </div>
+
+    <form id="upload-form" class="upload-card">
+      <label class="field">
+        <span>Meeting title</span>
+        <input type="text" id="title-input" placeholder="Q3 Roadmap Sync" required />
+      </label>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="file-input" accept=".mp3,.mp4,.wav,.m4a,.webm,.ogg,.flac" required />
+        <span id="dropzone-label">Drop audio file or click to browse</span>
+      </label>
+      <button type="submit" id="upload-btn" class="btn btn-accent">Upload &amp; Process</button>
+      <p id="upload-status" class="status-line"></p>
+    </form>
+
+    <div class="rack-tabs">
+      <button class="tab-btn active" data-tab="meetings">Meetings</button>
+      <button class="tab-btn" data-tab="actions">Open Tasks</button>
+    </div>
+
+    <div id="meeting-list" class="meeting-list"></div>
+    <div id="action-list" class="meeting-list" style="display:none"></div>
+  </aside>
+
+  <main class="console">
+    <div id="empty-state" class="empty-state">
+      <svg viewBox="0 0 64 64" width="56" height="56" aria-hidden="true">
+        <circle cx="32" cy="32" r="30" fill="none" stroke="var(--line)" stroke-width="2"/>
+        <path d="M20 32h6l4-12 8 24 4-12h6" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p>Upload a recording, or select a past meeting from the rack to see its readout.</p>
+    </div>
+
+    <div id="meeting-view" class="meeting-view" hidden>
+      <header class="mv-header">
+        <div>
+          <span class="badge" id="mv-status">—</span>
+          <h2 id="mv-title">—</h2>
+        </div>
+        <div class="mv-actions">
+          <button class="btn btn-ghost" id="btn-ics">↓ Calendar (.ics)</button>
+          <button class="btn btn-ghost" id="btn-docx">↓ Minutes (.docx)</button>
+        </div>
+      </header>
+
+      <section class="meter-row">
+        <div class="vu-meter">
+          <div class="vu-label">Meeting Health</div>
+          <div class="vu-score" id="health-score">—</div>
+          <div class="vu-track"><div class="vu-fill" id="health-fill"></div></div>
+        </div>
+        <div class="sub-meters" id="sub-meters"></div>
+        <div class="sentiment-pill" id="sentiment-pill">sentiment: —</div>
+      </section>
+
+      <section class="grid-2">
+        <div class="panel">
+          <h3>Summary</h3>
+          <p id="summary-text" class="prose">—</p>
+        </div>
+        <div class="panel">
+          <h3>Key Decisions</h3>
+          <ul id="decisions-list" class="check-list"></ul>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Action Items</h3>
+        <table class="ai-table">
+          <thead><tr><th>Task</th><th>Owner</th><th>Deadline</th><th>Priority</th><th>Status</th></tr></thead>
+          <tbody id="ai-tbody"></tbody>
+        </table>
+      </section>
+
+      <section class="grid-2">
+        <div class="panel">
+          <h3>Risks &amp; Open Questions</h3>
+          <ul id="risks-list" class="warn-list"></ul>
+        </div>
+        <div class="panel">
+          <h3>Follow-up Email Draft</h3>
+          <pre id="email-draft" class="readout">—</pre>
+          <button class="btn btn-ghost btn-sm" id="btn-copy-email">Copy</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Ask this meeting <span class="hint">(or toggle to ask across everything)</span></h3>
+        <form id="ask-form" class="ask-form">
+          <input type="text" id="ask-input" placeholder="What did we decide about the launch date?" />
+          <label class="toggle"><input type="checkbox" id="ask-scope"/> search all meetings</label>
+          <button type="submit" class="btn btn-accent btn-sm">Ask</button>
+        </form>
+        <p id="ask-answer" class="prose"></p>
+      </section>
+
+      <section class="panel">
+        <h3 class="collapsible" id="transcript-toggle">▸ Full Transcript</h3>
+        <div id="transcript-body" class="readout transcript-body" hidden></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
