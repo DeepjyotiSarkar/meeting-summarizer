@@ -174,3 +174,5 @@ Mapped to the stated evaluation focus:
   addition.
 - **Live/streaming transcription**: swap the upload flow for a
   WebSocket endpoint and a streaming-capable ASR provider.
+
+📹 [Watch full HD Demo Video on Google Drive](https://drive.google.com/file/d/1GIaX0lbTT3ce4n_npRgLxiB3q0rR8jsT/view?usp=share_link)
