@@ -1,28 +1,8 @@
 """
-This is the differentiating piece of the project. Instead of asking the
-LLM for a loose paragraph summary (what most Meeting Summarizer clones
-do), we force a single structured JSON extraction that gives us:
-
-  - summary_text                 short prose summary
-  - key_decisions[]               decisions actually made (not discussed)
-  - action_items[]                {description, owner, deadline, priority}
-  - risks_or_open_questions[]      unresolved items / blockers
-  - sentiment                     overall tone of the meeting
-  - health_score + breakdown       0-100 "how effective was this meeting"
-  - follow_up_email_draft          ready-to-send recap email
-
-Doing it in ONE call (rather than separate summary / action-item /
-sentiment calls) means every field is derived from a single consistent
-read of the transcript, which is both cheaper and more coherent than
-chaining several prompts.
-
-Two providers are supported and both are forced into JSON:
-  - OpenAI:    response_format={"type": "json_schema", ...}
-  - Anthropic: tool_choice forcing a single tool call (structured output
-               pattern) rather than hoping the model wraps JSON correctly
-               in prose.
+Structured JSON meeting summarization powered by Groq / OpenAI / Anthropic.
 """
 import json
+import os
 from datetime import date
 from typing import Dict, List, Optional
 
@@ -109,14 +89,27 @@ def summarize_meeting(transcript_text: str, meeting_title: str = "Untitled Meeti
 def _summarize_openai(user_prompt: str) -> Dict:
     from openai import OpenAI
 
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    
+    # Directly targeting Groq's API endpoint
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://api.groq.com/openai/v1"
+    )
+
+    system_content = (
+        f"{SYSTEM_INSTRUCTIONS}\n\n"
+        f"You MUST return ONLY a valid JSON object adhering strictly to this JSON Schema:\n"
+        f"{json.dumps(JSON_SCHEMA['schema'])}"
+    )
+
     resp = client.chat.completions.create(
         model=config.OPENAI_MODEL,
         messages=[
-            {"role": "system", "content": SYSTEM_INSTRUCTIONS},
+            {"role": "system", "content": system_content},
             {"role": "user", "content": user_prompt},
         ],
-        response_format={"type": "json_schema", "json_schema": JSON_SCHEMA},
+        response_format={"type": "json_object"},
         temperature=0.2,
     )
     return json.loads(resp.choices[0].message.content)
@@ -146,7 +139,7 @@ def _summarize_anthropic(user_prompt: str) -> Dict:
 
 
 def answer_question(question: str, context_chunks: List[str]) -> str:
-    """RAG-style Q&A over retrieved transcript chunks (see embedding_service)."""
+    """RAG-style Q&A over retrieved transcript chunks."""
     context = "\n\n---\n\n".join(context_chunks) if context_chunks else "(no matching context found)"
     prompt = (
         "Answer the user's question using ONLY the meeting excerpts below. "
@@ -165,7 +158,12 @@ def answer_question(question: str, context_chunks: List[str]) -> str:
         return "".join(b.text for b in resp.content if b.type == "text")
 
     from openai import OpenAI
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://api.groq.com/openai/v1"
+    )
+    
     resp = client.chat.completions.create(
         model=config.OPENAI_MODEL,
         messages=[{"role": "user", "content": prompt}],
